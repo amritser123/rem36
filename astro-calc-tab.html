@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 เครื่องคำนวณทางดาราศาสตร์</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1729, #1a2c51);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 25px 15px;
+        }
+
+        .header-bar {
+            background: linear-gradient(90deg, #1e5799, #2989d8);
+            border-radius: 14px 14px 0 0;
+            padding: 18px 24px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .header-bar h1 {
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,215,0,0.3);
+            margin-bottom: 4px;
+        }
+
+        .header-bar p {
+            font-size: 14px;
+            color: #d7e8ff;
+        }
+
+        /* === เมนูแท็บ === */
+        .tab-nav {
+            display: flex;
+            background: #f0f4f8;
+            border-bottom: 2px solid #ccc;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .tab-btn {
+            padding: 12px 18px;
+            border: none;
+            background: transparent;
+            color: #333;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: #e0e8f0;
+            color: #1e5799;
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid #1e5799;
+            background: #fff;
+            color: #1e5799;
+            font-weight: 600;
+        }
+
+        /* === เนื้อหาแต่ละแท็บ === */
+        .tab-content-wrap {
+            background: #ffffff;
+            color: #1a1a2e;
+            border-radius: 0 0 14px 14px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            min-height: 500px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #1e5799;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e8f0;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(30, 87, 153, 0.1);
+        }
+
+        .card h2 {
+            font-size: 17px;
+            margin-bottom: 12px;
+            color: #2c5aa0;
+        }
+
+        small {
+            display: block;
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .formula-box {
+            background: #eef4ff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 16px;
+            color: #1e5799;
+            margin-bottom: 14px;
+            border-left: 4px solid #1e5799;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            margin-bottom: 10px;
+            background: #fff;
+            color: #1a1a2e;
+            outline: none;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #1e5799;
+            box-shadow: 0 0 0 2px rgba(30, 87, 153, 0.2);
+        }
+
+        button {
+            padding: 11px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #34c759, #28a745);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 8px rgba(52, 199, 89, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #4cd964, #34c759);
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 14px;
+            padding: 16px;
+            background: #eef9f0;
+            border-radius: 10px;
+            border-left: 4px solid #34c759;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #155724;
+        }
+
+        .note {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .tab-nav { justify-content: flex-start; }
+            .header-bar h1 { font-size: 20px; }
+            .tab-content-wrap { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" style="max-width: 900px; margin: 0 auto;">
+        <!-- === ส่วนหัว === -->
+        <div class="header-bar">
+            <h1>⚡ เครื่องคำนวณทางดาราศาสตร์</h1>
+            <p>รวมสูตรและเครื่องคำนวณตามหลักวิทยาศาสตร์</p>
+        </div>
+
+        <!-- === เมนูแท็บ === -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-distance')">📏 แปลงหน่วยระยะทาง</button>
+            <button class="tab-btn" onclick="switchTab('tab-light')">⚡ เวลาแสงเดินทาง</button>
+            <button class="tab-btn" onclick="switchTab('tab-gravity')">🌍 แรงโน้มถ่วง</button>
+            <button class="tab-btn" onclick="switchTab('tab-kepler')">🪐 กฎเคเปลอร์</button>
+            <button class="tab-btn" onclick="switchTab('tab-galaxy')">🏋️ มวลดาราจักร</button>
+            <button class="tab-btn" onclick="switchTab('tab-parallax')">📐 มุมพาร์แลกซ์</button>
+            <button class="tab-btn" onclick="switchTab('tab-magnitude')">💫 ความสว่างดวงดาว</button>
+        </div>
+
+        <!-- === เนื้อหาแต่ละแท็บ === -->
+        <div class="tab-content-wrap">
+
+            <!-- แท็บ 1: แปลงหน่วยระยะทาง -->
+            <div class="tab-content active" id="tab-distance">
+                <h2 class="section-title">📏 แปลงหน่วยระยะทาง</h2>
+                <div class="card">
+                    <div class="formula-box">1 AU = 149,597,870.7 กม. &nbsp;|&nbsp; 1 แสงปี = 9.46×10¹² กม. &nbsp;|&nbsp; 1 พาร์เซก = 3.09×10¹³ กม.</div>
+                    
+                    <input type="number" id="distVal" placeholder="ป้อนค่าที่ต้องการแปลง" step="any">
+                    <select id="distFrom">
+                        <option value="km">กิโลเมตร</option>
+                        <option value="au">หน่วยดาราศาสตร์ (AU)</option>
+                        <option value="ly">แสงปี (ly)</option>
+                        <option value="pc">พาร์เซก (pc)</option>
+                    </select>
+                    <button onclick="convertDistance()">แปลงหน่วย</button>
+                    
+                    <div class="result" id="distResult">— รอการคำนวณ —</div>
+                    <p class="note">*หน่วยทุกค่าต้องสอดคล้องกัน</p>
+                </div>
+            </div>
+
+            <!-- แท็บ 2: เวลาแสงเดินทาง -->
+            <div class="tab-content" id="tab-light">
+                <h2 class="section-title">⚡ เวลาที่แสงใช้เดินทาง</h2>
+                <div class="card">
+                    <div class="formula-box">t = d / c &nbsp;&nbsp; c = 299,792.458 กม./วินาที</div>
+                    
+                    <input type="number" id="lightDist" placeholder="ป้อนระยะทาง" step="any">
+                    <select id="lightUnit">
+                        <option value="km">กิโลเมตร</option>
+                        <option value="au">หน่วยดาราศาสตร์ (AU)</option>
+                        <option value="ly">แสงปี</option>
+                    </select>
+                    <button onclick="calcLightTime()">คำนวณ</button>
+                    
+                    <div class="result" id="lightResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+            <!-- แท็บ 3: แรงโน้มถ่วง -->
+            <div class="tab-content" id="tab-gravity">
+                <h2 class="section-title">🌍 แรงโน้มถ่วง & ความเร่งโน้มถ่วง</h2>
+                <div class="card">
+                    <h2>แรงดึงดูดระหว่างวัตถุ</h2>
+                    <div class="formula-box">F = G·m₁·m₂ / r² &nbsp;&nbsp; G = 6.67430×10⁻¹¹ ม³/(กก.·วินาที²)</div>
+                    
+                    <input type="number" id="m1" placeholder="มวลวัตถุที่ 1 (กก.)" step="any">
+                    <input type="number" id="m2" placeholder="มวลวัตถุที่ 2 (กก.)" step="any">
+                    <input type="number" id="distG" placeholder="ระยะห่างระหว่างศูนย์กลาง (เมตร)" step="any">
+                    <button onclick="calcGravity()">คำนวณแรงดึงดูด</button>
+                    
+                    <div class="result" id="gravityResult">— รอการคำนวณ —</div>
+                </div>
+
+                <div class="card">
+                    <h2>ความเร่งโน้มถ่วงบนผิววัตถุ</h2>
+                    <div class="formula-box">g = G·M / R² &nbsp;&nbsp; g_โลก ≈ 9.81 ม./วินาที²</div>
+                    
+                    <input type="number" id="massBody" placeholder="มวลวัตถุ (กก.)" step="any">
+                    <input type="number" id="radiusBody" placeholder="รัศมีวัตถุ (เมตร)" step="any">
+                    <button onclick="calcGravityAccel()">คำนวณความเร่ง</button>
+                    
+                    <div class="result" id="gAccelResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+            <!-- แท็บ 4: กฎเคเปลอร์ -->
+            <div class="tab-content" id="tab-kepler">
+                <h2 class="section-title">🪐 กฎการเคลื่อนที่ของเคเปลอร์ (ข้อที่ 3)</h2>
+                <div class="card">
+                    <div class="formula-box">a³ / T² = ค่าคงที่ &nbsp;&nbsp; a=รัศมีโคจร (AU), T=คาบโคจร (ปี)</div>
+                    <small>ป้อนค่าเพียงช่องเดียว → อีกค่าจะคำนวณให้อัตโนมัติ</small>
+                    
+                    <input type="number" id="auVal" placeholder="รัศมีโคจร (AU)" step="any">
+                    <input type="number" id="yearVal" placeholder="คาบโคจร (ปี)" step="any">
+                    <button onclick="calcKepler()">คำนวณ</button>
+                    
+                    <div class="result" id="keplerResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+            <!-- แท็บ 5: มวลดาราจักร -->
+            <div class="tab-content" id="tab-galaxy">
+                <h2 class="section-title">🏋️ มวลดาราจักร</h2>
+                <div class="card">
+                    <div class="formula-box">M = v²·r / G &nbsp;&nbsp; (คำนวณจากความเร็วโคจรของดวงดาว)</div>
+                    
+                    <input type="number" id="v_km" placeholder="ความเร็วโคจร (กม./วินาที)" step="any">
+                    <input type="number" id="r_kpc" placeholder="ระยะห่างจากใจกลางดาราจักร (กิโลพาร์เซก)" step="any">
+                    <button onclick="calcGalaxyMass()">คำนวณมวล</button>
+                    
+                    <div class="result" id="galaxyMassResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+            <!-- แท็บ 6: มุมพาร์แลกซ์ -->
+            <div class="tab-content" id="tab-parallax">
+                <h2 class="section-title">📐 ระยะทางจากมุมพาร์แลกซ์</h2>
+                <div class="card">
+                    <div class="formula-box">d = 1 / p &nbsp;&nbsp; d=ระยะทาง (พาร์เซก), p=มุมพาร์แลกซ์ (อาร์กวินาที)</div>
+                    
+                    <input type="number" id="mas" placeholder="มุมพาร์แลกซ์ (มิลลิอาร์กวินาที)" step="any">
+                    <button onclick="calcParallax()">คำนวณระยะทาง</button>
+                    
+                    <div class="result" id="parallaxResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+            <!-- แท็บ 7: ความสว่างดวงดาว -->
+            <div class="tab-content" id="tab-magnitude">
+                <h2 class="section-title">💫 ความสว่างของดวงดาว</h2>
+                <div class="card">
+                    <div class="formula-box">m - M = 5·log₁₀(d / 10) &nbsp;&nbsp; m=ขนาดประจักษ์, M=ขนาดสัมบูรณ์, d=ระยะทาง (พาร์เซก)</div>
+                    
+                    <input type="number" id="absMag" placeholder="ขนาดสัมบูรณ์ M" step="any">
+                    <input type="number" id="distMag" placeholder="ระยะทาง (พาร์เซก)" step="any">
+                    <button onclick="calcMagnitude()">คำนวณความสว่าง</button>
+                    
+                    <div class="result" id="magnitudeResult">— รอการคำนวณ —</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    // === เปลี่ยนแท็บ ===
+    function switchTab(tabId) {
+        // ซ่อนทุกแท็บ
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // แสดงแท็บที่เลือก
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // === ค่าคงที่ทางดาราศาสตร์ ===
+    const c = 299792.458;
+    const AU = 149597870.7;
+    const ly = 9.4607304725808e12;
+    const pc = 3.0856775814913673e13;
+    const G = 6.67430e-11;
+    const Msun = 1.98847e30;
+    const gEarth = 9.80665;
+
+    // === 1. แปลงระยะทาง ===
+    function convertDistance() {
+        const val = parseFloat(document.getElementById('distVal').value);
+        const from = document.getElementById('distFrom').value;
+        if (isNaN(val)) return document.getElementById('distResult').textContent = '⚠️ กรุณาป้อนค่าที่ถูกต้อง';
+        let km;
+        if (from === 'km') km = val;
+        else if (from === 'au') km = val * AU;
+        else if (from === 'ly') km = val * ly;
+        else if (from === 'pc') km = val * pc;
+
+        document.getElementById('distResult').innerHTML = `
+            📏 ${km.toExponential(6)} กม.<br>
+            🌍 ${(km/AU).toFixed(6)} AU<br>
+            ✨ ${(km/ly).toExponential(6)} แสงปี<br>
+            ⭐ ${(km/pc).toExponential(6)} พาร์เซก
+        `;
+    }
+
+    // === 2. เวลาแสงเดินทาง ===
+    function calcLightTime() {
+        let val = parseFloat(document.getElementById('lightDist').value);
+        const unit = document.getElementById('lightUnit').value;
+        if (isNaN(val)) return document.getElementById('lightResult').textContent = '⚠️ กรุณาป้อนระยะทาง';
+        if (unit === 'au') val *= AU;
+        else if (unit === 'ly') val *= ly;
+
+        let sec = val / c;
+        let txt = '';
+        if (sec < 60) txt = `${sec.toFixed(2)} วินาที`;
+        else if (sec < 3600) txt = `${(sec/60).toFixed(2)} นาที`;
+        else if (sec < 86400) txt = `${(sec/3600).toFixed(2)} ชั่วโมง`;
+        else if (sec < 31557600) txt = `${(sec/86400).toFixed(2)} วัน`;
+        else txt = `${(sec/31557600).toFixed(4)} ปี`;
+
+        document.getElementById('lightResult').textContent = `✨ แสงใช้เวลาเดินทาง: ${txt}`;
+    }
+
+    // === 3. แรงโน้มถ่วงระหว่างวัตถุ ===
+    function calcGravity() {
+        const m1 = parseFloat(document.getElementById('m1').value);
+        const m2 = parseFloat(document.getElementById('m2').value);
+        const r = parseFloat(document.getElementById('distG').value);
+        if (isNaN(m1) || isNaN(m2) || isNaN(r) || r <= 0)
+            return document.getElementById('gravityResult').textContent = '⚠️ กรุณาป้อนค่าที่ถูกต้อง';
+
+        const F = G * m1 * m2 / (r * r);
+        const kgf = F / gEarth;
+
+        document.getElementById('gravityResult').innerHTML = `
+            🔹 แรงดึงดูด F = ${F.toExponential(6)} นิวตัน<br>
+            🔹 ≈ ${kgf.toExponential(6)} กิโลกรัม-แรง
+        `;
+    }
+
+    // === 4. ความเร่งโน้มถ่วงบนผิว ===
+    function calcGravityAccel() {
+        const M = parseFloat(document.getElementById('massBody').value);
+        const R = parseFloat(document.getElementById('radiusBody').value);
+        if (isNaN(M) || isNaN(R) || R <= 0)
+            return document.getElementById('gAccelResult').textContent = '⚠️ กรุณาป้อนค่าที่ถูกต้อง';
+
+        const g = (G * M) / (R * R);
+        const ratio = g / gEarth;
+
+        document.getElementById('gAccelResult').innerHTML = `
+            🔹 ความเร่งโน้มถ่วง g = ${g.toFixed(4)} ม./วินาที²<br>
+            🔹 = ${ratio.toFixed(4)} เท่าของความเร่งบนพื้นโลก
+        `;
+    }
+
+    // === 5. กฎเคเปลอร์ ===
+    function calcKepler() {
+        let au = parseFloat(document.getElementById('auVal').value);
+        let yr = parseFloat(document.getElementById('yearVal').value);
+        let out = '';
+        if (!isNaN(au) && isNaN(yr)) {
+            yr = Math.sqrt(Math.pow(au, 3));
+            out = `🪐 รัศมีโคจร ${au} AU → คาบโคจร = ${yr.toFixed(4)} ปี`;
+        } else if (isNaN(au) && !isNaN(yr)) {
+            au = Math.cbrt(yr * yr);
+            out = `🪐 คาบโคจร ${yr} ปี → รัศมีโคจร = ${au.toFixed(4)} AU`;
+        } else {
+            out = '⚠️ ป้อนค่าเพียงช่องเดียว (รัศมี หรือ คาบโคจร)';
+        }
+        document.getElementById('keplerResult').textContent = out;
+    }
+
+    // === 6. มวลดาราจักร ===
+    function calcGalaxyMass() {
+        const v_km = parseFloat(document.getElementById('v_km').value);
+        const r_kpc = parseFloat(document.getElementById('r_kpc').value);
+        if (isNaN(v_km) || isNaN(r_kpc))
+            return document.getElementById('galaxyMassResult').textContent = '⚠️ กรุณาป้อนความเร็วและระยะทาง';
+
+        const v = v_km * 1000;
+        const r = r_kpc * 1000 * pc * 1000;
+        const M_kg = (v*v * r) / G;
+        const M_sun = M_kg / Msun;
+
+        document.getElementById('galaxyMassResult').innerHTML = `
+            🔹 มวลดาราจักร ≈ ${M_sun.toExponential(4)} เท่ามวลดวงอาทิตย์<br>
+            🔹 ≈ ${M_kg.toExponential(4)} กิโลกรัม
+        `;
+    }
+
+    // === 7. พาร์แลกซ์ ===
+    function calcParallax() {
+        const mas = parseFloat(document.getElementById('mas').value);
+        if (isNaN(mas) || mas <= 0)
+            return document.getElementById('parallaxResult').textContent = '⚠️ กรุณาป้อนค่ามุมพาร์แลกซ์ที่มากกว่า 0';
+
+        const p_arcsec = mas / 1000;
+        const d_pc = 1 / p_arcsec;
+
+        document.getElementById('parallaxResult').innerHTML = `
+            🔹 มุมพาร์แลกซ์ = ${mas} มิลลิอาร์กวินาที (${p_arcsec} อาร์กวินาที)<br>
+            🔹 ระยะทาง = ${d_pc.toFixed(2)} พาร์เซก<br>
+            🔹 = ${(d_pc * 3.26156).toFixed(2)} แสงปี<br>
+            🔹 = ${(d_pc / 1000).toFixed(4)} กิโลพาร์เซก
+        `;
+    }
+
+    // === 8. ความสว่างดวงดาว ===
+    function calcMagnitude() {
+        const M = parseFloat(document.getElementById('absMag').value);
+        const d = parseFloat(document.getElementById('distMag').value);
+        if (isNaN(M) || isNaN(d) || d <= 0)
+            return document.getElementById('magnitudeResult').textContent = '⚠️ กรุณาป้อนค่าที่ถูกต้อง';
+
+        const m = M + 5 * Math.log10(d / 10);
+        const ratio = Math.pow(100, (M - m)/5);
+
+        document.getElementById('magnitudeResult').innerHTML = `
+            🔹 ขนาดประจักษ์ m = ${m.toFixed(4)}<br>
+            🔹 สว่างกว่าที่ระยะ 10 พาร์เซก ≈ ${ratio.toFixed(3)} เท่า
+        `;
+    }
+</script>
+</body>
+</html>

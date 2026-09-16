@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องคำนวณ คณิต-ฟิสิกส์ ม.1-6</title>
+    <style>
+        *{margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif;}
+        body{background:#6366f1; min-height:100vh; padding:12px;}
+        .wrap{max-width:900px; margin:0 auto; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.15); overflow:hidden;}
+        header{background:#4f46e5; color:#fff; padding:16px; text-align:center;}
+        header h1{font-size:20px; margin-bottom:4px;}
+        .cats{display:flex; background:#eef2ff; flex-wrap:wrap;}
+        .cat{padding:10px 14px; border:none; background:transparent; cursor:pointer; font-weight:600; font-size:14px; color:#3730a3;}
+        .cat:hover{background:#ddd6fe;}
+        .cat.active{background:#fff; border-bottom:3px solid:#4f46e5; color:#4338ca;}
+        .tabs{display:flex; background:#f4f5f7; border-bottom:1px solid #e5e7eb; flex-wrap:wrap; overflow-x:auto;}
+        .tab{padding:9px 12px; border:none; background:transparent; cursor:pointer; font-size:13px; color:#4b5563; white-space:nowrap;}
+        .tab:hover{background:#e5e7eb;}
+        .tab.active{background:#fff; color:#4f46e5; border-bottom:2px solid #4f46e5; font-weight:600;}
+        .content{padding:16px;}
+        .pane{display:none;}
+        .pane.active{display:block; animation:fade .2s ease;}
+        @keyframes fade{from{opacity:.8;} to{opacity:1;}}
+        .formula{background:#eef2ff; padding:10px 12px; border-radius:6px; border-left:3px solid #4f46e5; margin:12px 0; font-size:15px; line-height:1.5;}
+        .inp{margin-bottom:10px;}
+        label{display:block; margin-bottom:4px; font-size:14px; color:#374151;}
+        input,select{width:100%; padding:9px 10px; border:1px solid #d1d5db; border-radius:5px; font-size:15px;}
+        input:focus,select:focus{outline:none; border-color:#4f46e5; box-shadow:0 0 0 2px rgba(79,70,229,.2);}
+        .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;}
+        button.calc{background:#10b981; color:#fff; border:none; padding:9px 20px; border-radius:5px; font-size:15px; font-weight:600; cursor:pointer;}
+        button.calc:hover{background:#059669;}
+        button.clr{background:#ef4444; color:#fff; border:none; padding:9px 20px; border-radius:5px; font-size:15px; font-weight:600; cursor:pointer;}
+        button.clr:hover{background:#dc2626;}
+        .out{margin-top:14px; padding:12px; background:#eff6ff; border-radius:6px; display:none;}
+        .out.show{display:block;}
+        .val{font-size:18px; font-weight:bold; color:#1d4ed8; margin-top:4px; line-height:1.6;}
+        hr{border:none; border-top:1px solid #eee; margin:20px 0;}
+        @media(max-width:480px){
+            .content{padding:12px;}
+            .cat{padding:9px 11px; font-size:13px;}
+            .tab{padding:8px 10px; font-size:12px;}
+            .btns{flex-direction:column;}
+            button.calc,button.clr{width:100%;}
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>🧮 คำนวณ คณิต ม.1-6 & ฟิสิกส์ ม.3-6</h1>
+    </header>
+
+    <!-- หมวดหมู่หลัก -->
+    <div class="cats">
+        <button class="cat" onclick="goCat('m13')">คณิต ม.1-3</button>
+        <button class="cat active" onclick="goCat('m46')">คณิต ม.3-6</button>
+        <button class="cat" onclick="goCat('phys')">ฟิสิกส์ ม.3-6</button>
+    </div>
+
+    <!-- ============= คณิต ม.3-6 ============= -->
+    <div id="sec-m46">
+        <div class="tabs">
+            <button class="tab active" onclick="tabTo('m46-poly')">พหุนาม</button>
+            <button class="tab" onclick="tabTo('m46-quad')">กำลังสอง</button>
+            <button class="tab" onclick="tabTo('m46-trig')">ตรีโกณ</button>
+            <button class="tab" onclick="tabTo('m46-log')">ลอการิทึม</button>
+            <button class="tab" onclick="tabTo('m46-seq')">ลำดับ-อนุกรม</button>
+            <button class="tab" onclick="tabTo('m46-mat')">เมทริกซ์</button>
+            <button class="tab" onclick="tabTo('m46-stat')">สถิติ</button>
+            <button class="tab" onclick="tabTo('m46-deriv')">อนุพันธ์</button>
+        </div>
+        <div class="content">
+            <!-- พหุนาม -->
+            <div id="m46-poly" class="pane active">
+                <h3>พหุนาม (ax+b)(cx+d)</h3>
+                <div class="formula">(ax+b)(cx+d) = acx² + (ad+bc)x + bd</div>
+                <div class="inp"><label>a</label><input type="number" id="p-a"></div>
+                <div class="inp"><label>b</label><input type="number" id="p-b"></div>
+                <div class="inp"><label>c</label><input type="number" id="p-c"></div>
+                <div class="inp"><label>d</label><input type="number" id="p-d"></div>
+                <div class="btns"><button class="calc" onclick="calcPoly()">คำนวณ</button><button class="clr" onclick="clearAll(['p-a','p-b','p-c','p-d'],'p-pout')">ล้าง</button></div>
+                <div class="out" id="p-pout"><strong>ผลลัพธ์</strong><div class="val" id="p-pv"></div></div>
+            </div>
+            <!-- สมการกำลังสอง -->
+            <div id="m46-quad" class="pane">
+                <h3>สมการกำลังสอง ax²+bx+c=0</h3>
+                <div class="formula">x = [−b ± √(b²−4ac)] ÷ 2a &nbsp; Δ = b²−4ac</div>
+                <div class="inp"><label>a (≠0)</label><input type="number" id="q-a"></div>
+                <div class="inp"><label>b</label><input type="number" id="q-b"></div>
+                <div class="inp"><label>c</label><input type="number" id="q-c"></div>
+                <div class="btns"><button class="calc" onclick="calcQuad()">คำนวณ</button><button class="clr" onclick="clearAll(['q-a','q-b','q-c'],'q-qout')">ล้าง</button></div>
+                <div class="out" id="q-qout"><strong>ผลลัพธ์</strong><div class="val" id="q-qv"></div></div>
+            </div>
+            <!-- ตรีโกณมิติ -->
+            <div id="m46-trig" class="pane">
+                <h3>ตรีโกณมิติ</h3>
+                <div class="formula">sin, cos, tan — มุมหน่วยองศา</div>
+                <div class="inp"><label>มุม θ (องศา)</label><input type="number" id="t-deg"></div>
+                <div class="btns"><button class="calc" onclick="calcTrig()">คำนวณ</button><button class="clr" onclick="clearAll(['t-deg'],'t-tout')">ล้าง</button></div>
+                <div class="out" id="t-tout"><strong>ผลลัพธ์</strong><div class="val" id="t-tv"></div></div>
+            </div>
+            <!-- ลอการิทึม -->
+            <div id="m46-log" class="pane">
+                <h3>ลอการิทึม logₐ b</h3>
+                <div class="formula">logₐ b = ln(b)/ln(a) &nbsp; a>0, a≠1, b>0</div>
+                <div class="inp"><label>ฐาน a</label><input type="number" id="l-a" value="10"></div>
+                <div class="inp"><label>จำนวน b</label><input type="number" id="l-b"></div>
+                <div class="btns"><button class="calc" onclick="calcLog()">คำนวณ</button><button class="clr" onclick="clearAll(['l-a','l-b'],'l-lout')">ล้าง</button></div>
+                <div class="out" id="l-lout"><strong>ผลลัพธ์</strong><div class="val" id="l-lv"></div></div>
+            </div>
+            <!-- ลำดับอนุกรม -->
+            <div id="m46-seq" class="pane">
+                <h3>ลำดับและอนุกรม</h3>
+                <div class="formula">เลขคณิต: aₙ=a₁+(n−1)d, Sₙ=n/2(a₁+aₙ) | เรขาคณิต: aₙ=a₁·rⁿ⁻¹, Sₙ=a₁(1−rⁿ)/(1−r)</div>
+                <div class="inp"><label>ประเภท</label><select id="s-type"><option value="arith">เลขคณิต</option><option value="geo">เรขาคณิต</option></select></div>
+                <div class="inp"><label>พจน์แรก a₁</label><input type="number" id="s-a1"></div>
+                <div class="inp"><label>d หรือ r</label><input type="number" id="s-dr"></div>
+                <div class="inp"><label>จำนวนพจน์ n</label><input type="number" id="s-n"></div>
+                <div class="btns"><button class="calc" onclick="calcSeq()">คำนวณ</button><button class="clr" onclick="clearAll(['s-a1','s-dr','s-n'],'s-sout')">ล้าง</button></div>
+                <div class="out" id="s-sout"><strong>ผลลัพธ์</strong><div class="val" id="s-sv"></div></div>
+            </div>
+            <!-- เมทริกซ์ -->
+            <div id="m46-mat" class="pane">
+                <h3>เมทริกซ์ 2×2</h3>
+                <div class="formula">det = ad−bc &nbsp; A⁻¹ = 1/det × [[d,−b],[−c,a]]</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div class="inp"><label>a</label><input type="number" id="ma-a"></div>
+                    <div class="inp"><label>b</label><input type="number" id="ma-b"></div>
+                    <div class="inp"><label>c</label><input type="number" id="ma-c"></div>
+                    <div class="inp"><label>d</label><input type="number" id="ma-d"></div>
+                </div>
+                <div class="btns"><button class="calc" onclick="calcMat()">คำนวณ</button><button class="clr" onclick="clearAll(['ma-a','ma-b','ma-c','ma-d'],'ma-maout')">ล้าง</button></div>
+                <div class="out" id="ma-maout"><strong>ผลลัพธ์</strong><div class="val" id="ma-mav"></div></div>
+            </div>
+            <!-- สถิติ -->
+            <div id="m46-stat" class="pane">
+                <h3>สถิติขั้นสูง</h3>
+                <div class="formula">ค่าเฉลี่ย, ความแปรปรวน, ส่วนเบี่ยงเบนมาตรฐาน</div>
+                <div class="inp"><label>ข้อมูล คั่นด้วย ,</label><input type="text" id="st-x" placeholder="เช่น 2,4,6,8,10"></div>
+                <div class="btns"><button class="calc" onclick="calcStat()">คำนวณ</button><button class="clr" onclick="clearAll(['st-x'],'st-stout')">ล้าง</button></div>
+                <div class="out" id="st-stout"><strong>ผลลัพธ์</strong><div class="val" id="st-stv"></div></div>
+            </div>
+            <!-- อนุพันธ์ -->
+            <div id="m46-deriv" class="pane">
+                <h3>อนุพันธ์เบื้องต้น</h3>
+                <div class="formula">d/dx (a·xⁿ) = a·n·xⁿ⁻¹</div>
+                <div class="inp"><label>สัมประสิทธิ์ a</label><input type="number" id="d-a"></div>
+                <div class="inp"><label>เลขชี้กำลัง n</label><input type="number" id="d-n"></div>
+                <div class="inp"><label>ค่า x ที่ต้องการหาอนุพันธ์</label><input type="number" id="d-x"></div>
+                <div class="btns"><button class="calc" onclick="calcDeriv()">คำนวณ</button><button class="clr" onclick="clearAll(['d-a','d-n','d-x'],'d-dout')">ล้าง</button></div>
+                <div class="out" id="d-dout"><strong>ผลลัพธ์</strong><div class="val" id="d-dv"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============= คณิต ม.1-3 ============= -->
+    <div id="sec-m13" style="display:none;">
+        <div class="tabs">
+            <button class="tab active" onclick="tabTo('m13-avg')">ค่าเฉลี่ย</button>
+            <button class="tab" onclick="tabTo('m13-geo')">เรขาคณิต</button>
+            <button class="tab" onclick="tabTo('m13-per')">ร้อยละ</button>
+            <button class="tab" onclick="tabTo('m13-py')">พีทาโกรัส</button>
+            <button class="tab" onclick="tabTo('m13-eq')">สมการ</button>
+        </div>
+        <div class="content">
+            <div id="m13-avg" class="pane active">
+                <h3>ค่าเฉลี่ยเลขคณิต</h3>
+                <div class="formula">ค่าเฉลี่ย = ผลรวม ÷ จำนวน</div>
+                <div class="inp"><label>ตัวเลข คั่นด้วย ,</label><input type="text" id="m13-n"></div>
+                <div class="btns"><button class="calc" onclick="calcM13Avg()">คำนวณ</button><button class="clr" onclick="clearAll(['m13-n'],'m13-o')">ล้าง</button></div>
+                <div class="out" id="m13-o"><strong>ผลลัพธ์</strong><div class="val" id="m13-v"></div></div>
+            </div>
+            <div id="m13-geo" class="pane">
+                <h3>พื้นที่รูปทรง</h3>
+                <div class="inp"><label>เลือก</label><select id="m13-gs"><option value="rect">สี่เหลี่ยม</option><option value="tri">สามเหลี่ยม</option><option value="circ">วงกลม</option></select></div>
+                <div class="inp"><label>กว้าง/รัศมี</label><input type="number" id="m13-a"></div>
+                <div class="inp"><label>ยาว (วงกลมปล่อยว่าง)</label><input type="number" id="m13-b"></div>
+                <div class="btns"><button class="calc" onclick="calcM13Geo()">คำนวณ</button><button class="clr" onclick="clearAll(['m13-a','m13-b'],'m13-go')">ล้าง</button></div>
+                <div class="out" id="m13-go"><strong>ผลลัพธ์</strong><div class="val" id="m13-gv"></div></div>
+            </div>
+            <div id="m13-per" class="pane">
+                <h3>ร้อยละ</h3>
+                <div class="formula">ร้อยละ = (ส่วนที่/ทั้งหมด) × 100</div>
+                <div class="inp"><label>ส่วนที่</label><input type="number" id="m13-p1"></div>
+                <div class="inp"><label>ทั้งหมด</label><input type="number" id="m13-p2"></div>
+                <div class="btns"><button class="calc" onclick="calcM13Per()">คำนวณ</button><button class="clr" onclick="clearAll(['m13-p1','m13-p2'],'m13-po')">ล้าง</button></div>
+                <div class="out" id="m13-po"><strong>ผลลัพธ์</strong><div class="val" id="m13-pv"></div></div>
+            </div>
+            <div id="m13-py" class="pane">
+                <h3>ทฤษฎีบทพีทาโกรัส</h3>
+                <div class="formula">c² = a² + b² — ปล่อยค่าที่ต้องการหาว่าง</div>
+                <div class="inp"><label>ด้าน a</label><input type="number" id="m13-pya"></div>
+                <div class="inp"><label>ด้าน b</label><input type="number" id="m13-pyb"></div>
+                <div class="inp"><label>ด้าน c</label><input type="number" id="m13-pyc"></div>
+                <div class="btns"><button class="calc" onclick="calcM13Py()">คำนวณ</button><button class="clr" onclick="clearAll(['m13-pya','m13-pyb','m13-pyc'],'m13-pyo')">ล้าง</button></div>
+                <div class="out" id="m13-pyo"><strong>ผลลัพธ์</strong><div class="val" id="m13-pyv"></div></div>
+            </div>
+            <div id="m13-eq" class="pane">
+                <h3>สมการ ax+b=c</h3>
+                <div class="formula">x = (c − b) ÷ a</div>
+                <div class="inp"><label>a</label><input type="number" id="m13-eqa"></div>
+                <div class="inp"><label>b</label><input type="number" id="m13-eqb"></div>
+                <div class="inp"><label>c</label><input type="number" id="m13-eqc"></div>
+                <div class="btns"><button class="calc" onclick="calcM13Eq()">คำนวณ</button><button class="clr" onclick="clearAll(['m13-eqa','m13-eqb','m13-eqc'],'m13-eqo')">ล้าง</button></div>
+                <div class="out" id="m13-eqo"><strong>ผลลัพธ์</strong><div class="val" id="m13-eqv"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============= ฟิสิกส์ ม.3-6 ============= -->
+    <div id="sec-phys" style="display:none;">
+        <div class="tabs">
+            <button class="tab active" onclick="tabTo('ph-motion')">การเคลื่อนที่</button>
+            <button class="tab" onclick="tabTo('ph-force')">แรง</button>
+            <button class="tab" onclick="tabTo('ph-ener')">พลังงาน</button>
+            <button class="tab" onclick="tabTo('ph-press')">ความดัน</button>
+            <button class="tab" onclick="tabTo('ph-heat')">ความร้อน</button>
+            <button class="tab" onclick="tabTo('ph-el')">ไฟฟ้า</button>
+            <button class="tab" onclick="tabTo('ph-wave')">คลื่น</button>
+            <button class="tab" onclick="tabTo('ph-light')">แสง</button>
+        </div>
+        <div class="content">
+            <div id="ph-motion" class="pane active">
+                <h3>การเคลื่อนที่ s = v·t</h3>
+                <div class="inp"><label>ความเร็ว (m/s)</label><input type="number" id="ph-v"></div>
+                <div class="inp"><label>เวลา (วินาที)</label><input type="number" id="ph-t"></div>
+                <div class="btns"><button class="calc" onclick="calcPhMotion()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-v','ph-t'],'ph-mo')">ล้าง</button></div>
+                <div class="out" id="ph-mo"><strong>ผลลัพธ์</strong><div class="val" id="ph-mv"></div></div>
+            </div>
+            <div id="ph-force" class="pane">
+                <h3>แรง F = m·a</h3>
+                <div class="inp"><label>มวล (kg)</label><input type="number" id="ph-m"></div>
+                <div class="inp"><label>ความเร่ง (m/s²)</label><input type="number" id="ph-a"></div>
+                <div class="btns"><button class="calc" onclick="calcPhForce()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-m','ph-a'],'ph-fo')">ล้าง</button></div>
+                <div class="out" id="ph-fo"><strong>ผลลัพธ์</strong><div class="val" id="ph-fv"></div></div>
+            </div>
+            <div id="ph-ener" class="pane">
+                <h3>พลังงาน Eₖ = ½mv²</h3>
+                <div class="inp"><label>มวล (kg)</label><input type="number" id="ph-em"></div>
+                <div class="inp"><label>ความเร็ว (m/s)</label><input type="number" id="ph-ev"></div>
+                <div class="btns"><button class="calc" onclick="calcPhEner()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-em','ph-ev'],'ph-eo')">ล้าง</button></div>
+                <div class="out" id="ph-eo"><strong>ผลลัพธ์</strong><div class="val" id="ph-ev"></div></div>
+            </div>
+            <div id="ph-press" class="pane">
+                <h3>ความดัน P = ρgh</h3>
+                <div class="inp"><label>ความหนาแน่น (kg/m³)</label><input type="number" id="ph-r" value="1000"></div>
+                <div class="inp"><label>ความลึก (m)</label><input type="number" id="ph-h"></div>
+                <div class="btns"><button class="calc" onclick="calcPhPress()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-r','ph-h'],'ph-po')">ล้าง</button></div>
+                <div class="out" id="ph-po"><strong>ผลลัพธ์</strong><div class="val" id="ph-pv"></div></div>
+            </div>
+            <div id="ph-heat" class="pane">
+                <h3>ความร้อน Q = mcΔT</h3>
+                <div class="inp"><label>มวล (kg)</label><input type="number" id="ph-hm"></div>
+                <div class="inp"><label>ความร้อนจำเพาะ (J/kg·°C)</label><input type="number" id="ph-hc"></div>
+                <div class="inp"><label>ΔT (°C)</label><input type="number" id="ph-dt"></div>
+                <div class="btns"><button class="calc" onclick="calcPhHeat()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-hm','ph-hc','ph-dt'],'ph-ho')">ล้าง</button></div>
+                <div class="out" id="ph-ho"><strong>ผลลัพธ์</strong><div class="val" id="ph-hv"></div></div>
+            </div>
+            <div id="ph-el" class="pane">
+                <h3>กฎโอห์ม V=I·R — ปล่อยค่าที่หาว่าง</h3>
+                <div class="inp"><label>V (โวลต์)</label><input type="number" id="ph-vv"></div>
+                <div class="inp"><label>I (แอมแปร์)</label><input type="number" id="ph-ii"></div>
+                <div class="inp"><label>R (โอห์ม)</label><input type="number" id="ph-rr"></div>
+                <div class="btns"><button class="calc" onclick="calcPhEl()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-vv','ph-ii','ph-rr'],'ph-eo2')">ล้าง</button></div>
+                <div class="out" id="ph-eo2"><strong>ผลลัพธ์</strong><div class="val" id="ph-ev2"></div></div>
+            </div>
+            <div id="ph-wave" class="pane">
+                <h3>คลื่น v = λ·f</h3>
+                <div class="inp"><label>ความยาวคลื่น λ (m)</label><input type="number" id="ph-wl"></div>
+                <div class="inp"><label>ความถี่ f (Hz)</label><input type="number" id="ph-ff"></div>
+                <div class="btns"><button class="calc" onclick="calcPhWave()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-wl','ph-ff'],'ph-wo')">ล้าง</button></div>
+                <div class="out" id="ph-wo"><strong>ผลลัพธ์</strong><div class="val" id="ph-wv"></div></div>
+            </div>
+            <div id="ph-light" class="pane">
+                <h3>เลนส์ 1/f = 1/d₀ + 1/dᵢ</h3>
+                <div class="inp"><label>f (cm)</label><input type="number" id="ph-lf"></div>
+                <div class="inp"><label>d₀ (cm)</label><input type="number" id="ph-ldo"></div>
+                <div class="inp"><label>dᵢ (ปล่อยว่างเพื่อหา)</label><input type="number" id="ph-ldi"></div>
+                <div class="btns"><button class="calc" onclick="calcPhLight()">คำนวณ</button><button class="clr" onclick="clearAll(['ph-lf','ph-ldo','ph-ldi'],'ph-lo')">ล้าง</button></div>
+                <div class="out" id="ph-lo"><strong>ผลลัพธ์</strong><div class="val" id="ph-lv"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== เครื่องมือกลาง =====
+function clearAll(ids, outId){
+    ids.forEach(id=>{const el=document.getElementById(id); if(el)el.value='';});
+    const out=document.getElementById(outId);
+    if(out){out.classList.remove('show'); const v=out.querySelector('.val'); if(v)v.innerHTML='';}
+}
+function goCat(cat){
+    document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('sec-m13').style.display='none';
+    document.getElementById('sec-m46').style.display='none';
+    document.getElementById('sec-phys').style.display='none';
+    document.getElementById('sec-'+cat).style.display='block';
+}
+function tabTo(id){
+    const p=event.target.closest('.content, .wrap');
+    p.querySelectorAll('.pane').forEach(e=>e.classList.remove('active'));
+    p.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+}
+function n(id){return parseFloat(document.getElementById(id).value);}
+function ok(vals){return vals.every(v=>!isNaN(v));}
+
+// ===== คณิต ม.3-6 =====
+function calcPoly(){
+    const a=n('p-a'),b=n('p-b'),c=n('p-c'),d=n('p-d');
+    if(!ok([a,b,c,d])){alert('กรอกครบทุกค่า');return;}
+    document.getElementById('p-pv').innerText=`(${a}x+${b})(${c}x+${d}) = ${a*c}x² + ${a*d+b*c}x + ${b*d}`;
+    document.getElementById('p-pout').classList.add('show');
+}
+function calcQuad(){
+    const a=n('q-a'),b=n('q-b'),c=n('q-c');
+    if(!ok([a,b,c])||a===0){alert('a≠0 และกรอกครบ');return;}
+    const D=b*b-4*a*c;
+    let txt=`Δ = ${D}`;
+    if(D>0){const x1=(-b+Math.sqrt(D))/(2*a),x2=(-b-Math.sqrt(D))/(2*a); txt+=`\nx₁=${x1.toFixed(4)}, x₂=${x2.toFixed(4)}`;}
+    else if(D===0){txt+=`\nx = ${(-b/(2*a)).toFixed(4)}`;}
+    else{txt+='\nไม่มีรากจริง';}
+    document.getElementById('q-qv').innerText=txt;
+    document.getElementById('q-qout').classList.add('show');
+}
+function calcTrig(){
+    const deg=n('t-deg');
+    if(isNaN(deg)){alert('กรอกมุม');return;}
+    const r=deg*Math.PI/180;
+    document.getElementById('t-tv').innerHTML=`sin=${Math.sin(r).toFixed(4)}<br>cos=${Math.cos(r).toFixed(4)}<br>tan=${Math.tan(r).toFixed(4)}`;
+    document.getElementById('t-tout').classList.add('show');
+}
+function calcLog(){
+    const a=n('l-a'),b=n('l-b');
+    if(a<=0||a===1||b<=0||isNaN(a)||isNaN(b)){alert('a>0,a≠1,b>0');return;}
+    document.getElementById('l-lv').innerText=`log₍${a}₎(${b}) = ${(Math.log(b)/Math.log(a)).toFixed(6)}`;
+    document.getElementById('l-lout').classList.add('show');
+}
+function calcSeq(){
+    const t=document.getElementById('s-type').value,a1=n('s-a1'),dr=n('s-dr'),nn=n('s-n');
+    if(!ok([a1,dr,nn])||nn<=0){alert('กรอกครบ n>0');return;}
+    let an,sn;
+    if(t==='arith'){an=a1+(nn-1)*dr; sn=nn/2*(a1+an);}
+    else{an=a1*(dr**(nn-1)); sn=dr===1?a1*nn:a1*(1-dr**nn)/(1-dr);}
+    document.getElementById('s-sv').innerHTML=`aₙ = ${an.toFixed(4)}<br>Sₙ = ${sn.toFixed(4)}`;
+    document.getElementById('s-sout').classList.add('show');
+}
+function calcMat(){
+    const a=n('ma-a'),b=n('ma-b'),c=n('ma-c'),d=n('ma-d');
+    if(!ok([a,b,c,d])){alert('กรอกครบ');return;}
+    const det=a*d-b*c;
+    let txt=`det = ${det}`;
+    if(det!==0)txt+=`<br>A⁻¹ = 1/${det} × [[${d},${-b}],[${-c},${a}]]`;
+    else txt+='<br>หาอินเวอร์สไม่ได้';
+    document.getElementById('ma-mav').innerHTML=txt;
+    document.getElementById('ma-maout').classList.add('show');
+}
+function calcStat(){
+    const s=document.getElementById('st-x').value;
+    const arr=s.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+    if(arr.length===0){alert('กรอกข้อมูล');return;}
+    const n=arr.length,sum=arr.reduce((a,b)=>a+b,0),avg=sum/n;
+    const varr=arr.reduce((t,x)=>t+(x-avg)**2,0)/(n-1);
+    const std=Math.sqrt(varr);
+    document.getElementById('st-stv').innerHTML=`จำนวน=${n}<br>ผลรวม=${sum.toFixed(2)}<br>ค่าเฉลี่ย=${avg.toFixed(2)}<br>ความแปรปรวน=${varr.toFixed(2)}<br>ส่วนเบี่ยงเบนมาตรฐาน=${std.toFixed(2)}`;
+    document.getElementById('st-stout').classList.add('show');
+}
+function calcDeriv(){
+    const a=n('d-a'),nn=n('d-n'),x=n('d-x');
+    if(!ok([a,nn,x])){alert('กรอกครบ');return;}
+    const cof=a*nn;
+    const pow=nn-1;
+    const val=cof*(x**pow);
+    document.getElementById('d-dv').innerHTML=`f'(x) = ${cof}x^${pow}<br>f'(${x}) = ${val.toFixed(4)}`;
+    document.getElementById('d-dout').classList.add('show');
+}
+
+// ===== คณิต ม.1-3 =====
+function calcM13Avg(){
+    const s=document.getElementById('m13-n').value;
+    const arr=s.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+    if(arr.length===0){alert('กรอกตัวเลข');return;}
+    const sum=arr.reduce((a,b)=>a+b,0),avg=sum/arr.length;
+    document.getElementById('m13-v').innerText=`ผลรวม=${sum}, ค่าเฉลี่ย=${avg.toFixed(2)}, จำนวน=${arr.length}`;
+    document.getElementById('m13-o').classList.add('show');
+}
+function calcM13Geo(){
+    const t=document.getElementById('m13-gs').value,a=n('m13-a'),b=n('m13-b');
+    let v;
+    if(t==='rect')v=`พื้นที่ = ${(a*b).toFixed(2)}`;
+    else if(t==='tri')v=`พื้นที่ = ${(0.5*a*b).toFixed(2)}`;
+    else v=`พื้นที่ = ${(3.1416*a*a).toFixed(2)}`;
+    document.getElementById('m13-gv').innerText=v;
+    document.getElementById('m13-go').classList.add('show');
+}
+function calcM13Per(){
+    const p=n('m13-p1'),t=n('m13-p2');
+    if(isNaN(p)||isNaN(t)||t===0){alert('กรอกถูกต้อง');return;}
+    document.getElementById('m13-pv').innerText=`ร้อยละ = ${((p/t)*100).toFixed(2)} %`;
+    document.getElementById('m13-po').classList.add('show');
+}
+function calcM13Py(){
+    const a=n('m13-pya'),b=n('m13-pyb'),c=n('m13-pyc');
+    const cnt=[a,b,c].filter(x=>!isNaN(x)).length;
+    if(cnt!==2){alert('กรอก 2 ค่า');return;}
+    let v;
+    if(isNaN(c))v=`c = ${Math.hypot(a,b).toFixed(4)}`;
+    else if(isNaN(a))v=`a = ${Math.sqrt(c*c-b*b).toFixed(4)}`;
+    else v=`b = ${Math.sqrt(c*c-a*a).toFixed(4)}`;
+    document.getElementById('m13-pyv').innerText=v;
+    document.getElementById('m13-pyo').classList.add('show');
+}
+function calcM13Eq(){
+    const a=n('m13-eqa'),b=n('m13-eqb'),c=n('m13-eqc');
+    if(isNaN(a)||isNaN(b)||isNaN(c)||a===0){alert('กรอกครบ a≠0');return;}
+    document.getElementById('m13-eqv').innerText=`x = ${((c-b)/a).toFixed(4)}`;
+    document.getElementById('m13-eqo').classList.add('show');
+}
+
+// ===== ฟิสิกส์ =====
+function calcPhMotion(){const v=n('ph-v'),t=n('ph-t');if(!ok([v,t]))return;document.getElementById('ph-mv').innerText=`s = ${(v*t).toFixed(2)} ม.`;document.getElementById('ph-mo').classList.add('show');}
+function calcPhForce(){const m=n('ph-m'),a=n('ph-a');if(!ok([m,a]))return;document.getElementById('ph-fv').innerText=`F = ${(m*a).toFixed(2)} นิวตัน`;document.getElementById('ph-fo').classList.add('show');}
+function calcPhEner(){const m=n('ph-em'),v=n('ph-ev');if(!ok([m,v]))return;document.getElementById('ph-ev').innerText=`Eₖ = ${(0.5*m*v*v).toFixed(2)} จูล`;document.getElementById('ph-eo').classList.add('show');}
+function calcPhPress(){const r=n('ph-r'),h=n('ph-h');if(!ok([r,h]))return;document.getElementById('ph-pv').innerText=`P = ${(r*9.8*h).toFixed(2)} ปาสกาล`;document.getElementById('ph-po').classList.add('show');}
+function calcPhHeat(){const m=n('ph-hm'),c=n('ph-hc'),dt=n('ph-dt');if(!ok([m,c,dt]))return;document.getElementById('ph-hv').innerText=`Q = ${(m*c*dt).toFixed(2)} จูล`;document.getElementById('ph-ho').classList.add('show');}
+function calcPhEl(){let V=n('ph-vv'),I=n('ph-ii'),R=n('ph-rr');const cnt=[V,I,R].filter(x=>!isNaN(x)).length;if(cnt!==2){alert('กรอก 2 ค่า');return;}let v='';if(isNaN(V))V=I*R,v=`V = ${V.toFixed(2)} V`;else if(isNaN(I))I=V/R,v=`I = ${I.toFixed(2)} A`;else R=V/I,v=`R = ${R.toFixed(2)} Ω`;document.getElementById('ph-ev2').innerText=v;document.getElementById('ph-eo2').classList.add('show');}
+function calcPhWave(){const l=n('ph-wl'),f=n('ph-ff');if(!ok([l,f]))return;document.getElementById('ph-wv').innerText=`v = ${(l*f).toFixed(2)} ม./วินาที`;document.getElementById('ph-wo').classList.add('show');}
+function calcPhLight(){const f=n('ph-lf'),do_=n('ph-ldo'),di=n('ph-ldi');let v='';if(!isNaN(f)&&!isNaN(do_)&&isNaN(di)){const d=1/(1/f-1/do_);v=`dᵢ = ${d.toFixed(2)} ซม.`;}else if(!isNaN(do_)&&!isNaN(di)&&isNaN(f)){v=`f = ${(1/(1/do_+1/di)).toFixed(2)} ซม.`;}else if(!isNaN(f)&&!isNaN(di)&&isNaN(do_)){v=`d₀ = ${(1/(1/f-1/di)).toFixed(2)} ซม.`;}else{alert('กรอกครบ 2 ค่า');return;}document.getElementById('ph-lv').innerText=v;document.getElementById('ph-lo').classList.add('show');}
+</script>
+</div>
+</body>
+</html>

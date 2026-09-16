@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กระเป๋าเงินออนไลน์</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Chart & Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
+        body { background-color: #f0f4f8; padding: 20px; max-width: 950px; margin: 0 auto; }
+        .sync-box { background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .sync-status { font-size: 14px; color: #1e40af; }
+        .sync-status.live { color: #16a34a; font-weight: bold; }
+        .header-title { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; border-radius: 12px; text-align: center; font-size: 28px; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .total-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .total-box h2 { color: #4b5563; font-size: 18px; margin-bottom: 10px; }
+        .total-amount { font-size: 36px; font-weight: bold; color: #16a34a; }
+        .menu-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: nowrap; overflow-x: auto; }
+        .tab-btn { flex: 1 1 auto; min-width: 130px; padding: 12px 10px; background: #eef2ff; color: #3730a3; border-radius: 8px; cursor: pointer; transition: 0.2s; border: none; font-size: 15px; text-align: center; white-space: nowrap; }
+        .tab-btn.active { background: #2563eb; color: white; }
+        .tab-btn:hover { background: #c7d2fe; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .form-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; }
+        .col { flex: 1; min-width: 180px; }
+        label { display: block; margin-bottom: 5px; color: #4b5563; font-weight: 500; }
+        input, select, button, textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; }
+        button.btn-add { background: #2563eb; color: white; border: none; margin-top: 8px; font-size: 16px; cursor: pointer; }
+        button.btn-add:hover { background: #1d4ed8; }
+        button.btn-excel { background: #107c41; color: white; border: none; margin-top: 10px; cursor: pointer; }
+        button.btn-excel:hover { background: #0c6132; }
+        button.btn-delete { background: #ef4444; color: white; border: none; padding: 5px 10px; font-size: 13px; cursor: pointer; border-radius: 4px; width: auto; }
+        button.btn-email { background: #ea4335; color: white; border: none; margin-top: 10px; cursor: pointer; }
+        button.btn-email:hover { background: #d33828; }
+        button.btn-fav { background: #f59e0b; color: white; border: none; padding: 8px 12px; font-size: 14px; cursor: pointer; border-radius: 6px; margin-top: 20px; }
+        button.btn-fav:hover { background: #d97706; }
+        .fav-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        .fav-box h4 { color: #92400e; margin-bottom: 10px; }
+        .fav-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #f59e0b; }
+        .fav-info { cursor: pointer; flex: 1; }
+        .fav-info:hover { color: #2563eb; }
+        .fav-del { background: #fca5a5; color: #b91c1c; border: none; border-radius: 4px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+        .table-container, .chart-container, .monthly-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .sync-note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 15px; margin-bottom: 15px; border-radius: 0 8px 8px 0; color: #1e40af; font-size: 14px; }
+        
+        /* ===== ตารางปรับปรุง — ขึ้นบรรทัดอัตโนมัติ + สีแยก ===== */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        th, td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 14px; word-wrap: break-word; }
+        th { background-color: #f9fafb; color: #374151; cursor: pointer; user-select: none; }
+        th:hover { background-color: #eef2ff; }
+        th:nth-child(1), td:nth-child(1) { width: 12%; } /* วันที่ */
+        th:nth-child(2), td:nth-child(2) { width: 18%; } /* หมวดหมู่ */
+        th:nth-child(3), td:nth-child(3) { width: 28%; text-align: left; } /* รายการ */
+        th:nth-child(4), td:nth-child(4) { width: 14%; } /* ประเภท */
+        th:nth-child(5), td:nth-child(5) { width: 18%; } /* จำนวนเงิน */
+        th:nth-child(6), td:nth-child(6) { width: 10%; } /* ลบ */
+        td:nth-child(3) { white-space: normal; line-height: 1.4; } /* ขึ้นบรรทัดอัตโนมัติ */
+        th .sort-icon { font-size: 11px; margin-left: 4px; color: #9ca3af; }
+        th.sorted-asc .sort-icon::after { content: "▲"; color: #2563eb; }
+        th.sorted-desc .sort-icon::after { content: "▼"; color: #2563eb; }
+        /* สีแยกตามประเภท */
+        tr.row-income { background-color: #f0fdf4; }
+        tr.row-expense { background-color: #fef2f2; }
+        tr.row-advance { background-color: #faf5ff; }
+        tr:hover { filter: brightness(0.97); }
+        .income { color: #16a34a; font-weight: 500; }
+        .expense { color: #dc2626; font-weight: 500; }
+        .advance { color: #9333ea; font-weight: 500; }
+        .category-tag { display: inline-block; background: #eef2ff; color: #3730a3; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        
+        canvas { max-height: 350px; }
+        .month-card { padding: 15px; margin: 8px 0; background: #f8fafc; border-radius: 8px; border-left: 4px solid #2563eb; }
+        .month-card h4 { margin-bottom: 8px; color: #1f2937; }
+        .month-income { color: #16a34a; }
+        .month-expense { color: #dc2626; }
+        .month-balance { color: #2563eb; font-weight: bold; }
+        .status-box { margin-top: 12px; padding: 10px; border-radius: 6px; display: none; }
+        .status-box.success { background: #dcfce7; color: #166534; display: block; }
+        .status-box.info { background: #e0f2fe; color: #075985; display: block; }
+        .pass-box { background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .pass-box input { max-width: 300px; }
+    </style>
+</head>
+<body>
+
+    <!-- สถานะการเชื่อมต่อ -->
+    <div class="sync-box">
+        <span class="sync-status live" id="syncStatus">🟢 กำลังเชื่อมต่อระบบออนไลน์...</span>
+        <span style="font-size:13px; color:#666;">⚡ ซิงค์อัตโนมัติทุกอุปกรณ์</span>
+    </div>
+
+    <!-- กล่องตั้งชื่อห้องข้อมูล -->
+    <div class="pass-box" id="passBox">
+        <h4>🔐 ตั้งชื่อห้องข้อมูล (ใช้ร่วมกันได้)</h4>
+        <p style="font-size:13px; color:#666; margin:8px 0;">💡 ใส่ชื่อเดียวกันทุกอุปกรณ์ → ข้อมูลจะตรงกันทันที เช่น บ้าน, ครอบครัว, งาน</p>
+        <input type="text" id="roomId" placeholder="ตัวอย่าง: wallet123 หรือ ชื่อของคุณ">
+        <button class="btn-add" style="margin-top:8px;" onclick="enterRoom()">✅ เข้าใช้งาน</button>
+    </div>
+
+    <div id="mainApp" style="display:none;">
+
+    <div class="header-title">💰 กระเป๋าเงินออนไลน์</div>
+
+    <div class="total-box">
+        <h2>ยอดเงินคงเหลือทั้งหมด</h2>
+        <div class="total-amount" id="totalAll">0.00 บาท</div>
+    </div>
+
+    <div class="menu-box">
+        <button class="tab-btn active" onclick="switchTab('records')">📋 รายการทั้งหมด</button>
+        <button class="tab-btn" onclick="switchTab('monthly')">📊 ยอดรวมแต่ละเดือน</button>
+        <button class="tab-btn" onclick="switchTab('graph')">📈 กราฟการเงิน</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ การตั้งค่า</button>
+    </div>
+
+    <!-- ========== แท็บ: รายการทั้งหมด ========== -->
+    <div id="tab-records" class="tab-content active">
+        <div class="fav-box">
+            <h4>⭐ รายการโปรด / ค่าใช้จ่ายประจำ (กดเพื่อเติมข้อมูล)</h4>
+            <div id="favList"></div>
+            <button class="btn-fav" onclick="saveToFavorites()">⭐ บันทึกช่องปัจจุบันเป็นรายการโปรด</button>
+        </div>
+
+        <div class="form-section">
+            <div class="row">
+                <div class="col">
+                    <label>📅 วันที่</label>
+                    <input type="date" id="transactionDate">
+                </div>
+                <div class="col">
+                    <label>🏷️ หมวดหมู่</label>
+                    <select id="categorySelect" onchange="fillCategoryName()">
+                        <option value="">-- เลือกหมวดหมู่ --</option>
+                        <option value="ค่าขนม">ค่าขนม</option>
+                        <option value="ค่าน้ำมัน">ค่าน้ำมัน</option>
+                        <option value="ค่าข้าว">ค่าข้าว</option>
+                        <option value="ค่าของ">ค่าของ</option>
+                        <option value="ค่าเน็ต">ค่าเน็ต</option>
+                        <option value="เงินบวก">เงินบวก</option>
+                        <option value="อื่นๆ">อื่นๆ (พิมพ์เอง)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>📝 รายการ</label>
+                    <input type="text" id="itemName" placeholder="เช่น ค่าอาหาร, เงินเดือน, ค่าเช่าบ้าน">
+                </div>
+                <div class="col">
+                    <label>💵 จำนวนเงิน (บาท)</label>
+                    <input type="number" step="0.01" id="amountValue" placeholder="0.00">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>📂 ประเภท</label>
+                    <select id="typeSelect">
+                        <option value="income">✅ รายรับ</option>
+                        <option value="advance">⏳ รับเงินล่วงหน้า</option>
+                        <option value="expense">❌ รายจ่าย</option>
+                    </select>
+                </div>
+                <div class="col"></div>
+            </div>
+            <button class="btn-add" onclick="addRecord()">➕ เพิ่มรายการ</button>
+        </div>
+
+        <div class="table-container">
+            <h3>📋 ตารางสรุปการเงิน <span id="currentDateShow"></span></h3>
+            <p style="font-size:12px; color:#888; margin:5px 0;">💡 กดที่หัวคอลัมน์เพื่อเรียงลำดับ</p>
+            
+            <div class="sync-note">
+                💡 <strong>ตั้งชื่อห้องข้อมูลเดียวกันเพื่อซิงค์ข้อมูลทุกอุปกรณ์</strong> — เปลี่ยนอุปกรณ์ก็เห็นข้อมูลตรงกันทันที
+            </div>
+
+            <table id="financeTable">
+                <thead>
+                    <tr>
+                        <th data-sort="date">วันที่ <span class="sort-icon"></span></th>
+                        <th data-sort="category">หมวดหมู่ <span class="sort-icon"></span></th>
+                        <th data-sort="name">รายการ <span class="sort-icon"></span></th>
+                        <th data-sort="type">ประเภท <span class="sort-icon"></span></th>
+                        <th data-sort="amount">จำนวนเงิน <span class="sort-icon"></span></th>
+                        <th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== แท็บ: ยอดรวมแต่ละเดือน ========== -->
+    <div id="tab-monthly" class="tab-content">
+        <div class="monthly-container">
+            <h3>📊 ยอดสรุปแยกตามเดือน</h3>
+            <div id="monthlySummary"></div>
+        </div>
+    </div>
+
+    <!-- ========== แท็บ: กราฟ ========== -->
+    <div id="tab-graph" class="tab-content">
+        <div class="chart-container">
+            <h3>📈 สรุปรายรับ-รายจ่าย รายเดือน</h3>
+            <canvas id="financeChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ========== แท็บ: ตั้งค่า ========== -->
+    <div id="tab-settings" class="tab-content">
+        <div class="form-section">
+            <h3>⚙️ การตั้งค่า & ส่งออกข้อมูล</h3>
+            <p style="margin:10px 0; color:#666; font-size:14px;">✅ ข้อมูลซิงค์อัตโนมัติทุกอุปกรณ์แบบเรียลไทม์</p>
+            <hr style="margin:15px 0; border:none; border-top:1px solid #eee;">
+
+            <h4 style="margin-bottom:10px; color:#f59e0b;">🔄 เปลี่ยน/ย้ายห้องข้อมูล</h4>
+            <input type="text" id="newRoomId" placeholder="ใส่ชื่อห้องใหม่">
+            <button class="btn-add" style="margin-top:8px; background:#f59e0b;" onclick="changeRoom()">เปลี่ยนห้อง</button>
+
+            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+            <h4 style="margin-bottom:10px; color:#107c41;">📊 ส่งออกข้อมูลเป็น Excel</h4>
+            <button class="btn-excel" onclick="exportToExcel()">📥 ดาวน์โหลดไฟล์ Excel (.xlsx)</button>
+            <p style="font-size:13px; color:#666; margin-top:8px;">💡 กดปุ่มดาวน์โหลดเพื่อบันทึกไฟล์</p>
+            <div id="excelStatus" class="status-box"></div>
+
+            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+            <h4 style="margin-bottom:10px; color:#ea4335;">📧 ส่งข้อมูลไปยัง Gmail</h4>
+            <div class="row">
+                <div class="col">
+                    <label>ที่อยู่อีเมลผู้รับ</label>
+                    <input type="email" id="emailTo" placeholder="example@gmail.com">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>หัวข้อข้อความ</label>
+                    <input type="text" id="emailSubject" value="สรุปข้อมูลการเงิน - กระเป๋าเงินออนไลน์">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>ข้อความที่จะส่ง</label>
+                    <textarea id="emailMessage" rows="4" placeholder="พิมพ์ข้อความเพิ่มเติม...">สรุปข้อมูลการเงินของคุณ มีดังนี้ครับ
+
+</textarea>
+                </div>
+            </div>
+            <button class="btn-email" onclick="sendEmail()">📨 เปิด Gmail เพื่อส่งข้อมูล</button>
+            <div id="emailStatus" class="status-box"></div>
+
+            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+            <button class="btn-add" style="background:#ef4444;" onclick="if(confirm('ลบข้อมูลทั้งหมดในห้องนี้?')){clearAllData();}">🗑️ ลบข้อมูลทั้งหมด</button>
+        </div>
+    </div>
+
+    </div>
+
+    <script>
+        // ===== ข้อมูลเชื่อมต่อ Firebase =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyDigAY6dZ9UkZxgtaZMlLC2ieZuRIANCi4",
+            authDomain: "wallet-online-5e135.firebaseapp.com",
+            projectId: "wallet-online-5e135",
+            storageBucket: "wallet-online-5e135.firebasestorage.app",
+            messagingSenderId: "218897878632",
+            appId: "1:218897878632:web:dfc8e5a69088173dd435dd",
+            measurementId: "G-Y0915ZHD3C"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let records = [];
+        let favorites = [];
+        let chartInstance = null;
+        let roomId = localStorage.getItem('walletRoomId') || '';
+        let unsubscribeRecords = null;
+        let unsubscribeFavorites = null;
+        let sortKey = 'date';
+        let sortDir = 'desc';
+
+        // ===== เลือกหมวดหมู่แล้วเติมชื่ออัตโนมัติ =====
+        function fillCategoryName() {
+            const category = document.getElementById('categorySelect').value;
+            const nameInput = document.getElementById('itemName');
+            if (category && category !== 'อื่นๆ') {
+                nameInput.value = category;
+            } else if (category === 'อื่นๆ') {
+                nameInput.value = '';
+                nameInput.focus();
+            }
+        }
+
+        // ===== เข้าห้องข้อมูล =====
+        function enterRoom() {
+            const inputRoom = document.getElementById('roomId').value.trim() || roomId;
+            if (!inputRoom) { alert('กรุณาใส่ชื่อห้องข้อมูล'); return; }
+            roomId = inputRoom.replace(/\s+/g, '-').toLowerCase();
+            localStorage.setItem('walletRoomId', roomId);
+            document.getElementById('passBox').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            initApp();
+        }
+
+        function changeRoom() {
+            const newRoom = document.getElementById('newRoomId').value.trim();
+            if (!newRoom) { alert('กรุณาใส่ชื่อห้องใหม่'); return; }
+            if (unsubscribeRecords) unsubscribeRecords();
+            if (unsubscribeFavorites) unsubscribeFavorites();
+            roomId = newRoom.replace(/\s+/g, '-').toLowerCase();
+            localStorage.setItem('walletRoomId', roomId);
+            records = [];
+            favorites = [];
+            initApp();
+            alert('✅ เปลี่ยนห้องสำเร็จ! ข้อมูลจะโหลดมาใหม่ครับ');
+        }
+
+        // ===== เริ่มทำงาน & ฟังการเปลี่ยนแปลงแบบเรียลไทม์ =====
+        async function initApp() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+            document.getElementById('currentDateShow').textContent = `ณ วันที่ ${today}`;
+
+            unsubscribeRecords = db.collection('wallet_rooms').doc(roomId).collection('records')
+                .orderBy('date', 'desc')
+                .onSnapshot(snapshot => {
+                    records = [];
+                    snapshot.forEach(doc => {
+                        records.push({ id: doc.id, ...doc.data() });
+                    });
+                    applySort();
+                    renderTable();
+                    updateTotal();
+                    renderMonthlySummary();
+                    if (document.getElementById('tab-graph').classList.contains('active')) renderChart();
+                    document.getElementById('syncStatus').innerHTML = '🟢 อัปเดตล่าสุด — ซิงค์เรียลไทม์';
+                }, err => {
+                    console.error(err);
+                    document.getElementById('syncStatus').innerHTML = '🔴 ขาดการเชื่อมต่อ';
+                });
+
+            unsubscribeFavorites = db.collection('wallet_rooms').doc(roomId).collection('favorites')
+                .onSnapshot(snapshot => {
+                    favorites = [];
+                    snapshot.forEach(doc => {
+                        favorites.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderFavorites();
+                });
+
+            document.getElementById('syncStatus').innerHTML = '🟢 พร้อมใช้งาน — ซิงค์เรียลไทม์';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (roomId) {
+                document.getElementById('roomId').value = roomId;
+                enterRoom();
+            } else {
+                document.getElementById('syncStatus').innerHTML = '⏳ กรุณาตั้งชื่อห้องข้อมูลก่อน';
+            }
+            loadEmailSettings();
+
+            document.querySelectorAll('#financeTable th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sort;
+                    if (sortKey === key) {
+                        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortKey = key;
+                        sortDir = 'asc';
+                    }
+                    applySort();
+                    renderTable();
+                });
+            });
+        });
+
+        // ===== เรียงลำดับข้อมูล =====
+        function applySort() {
+            records.sort((a, b) => {
+                let valA = a[sortKey] || '';
+                let valB = b[sortKey] || '';
+                if (sortKey === 'amount') {
+                    valA = Number(valA);
+                    valB = Number(valB);
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+                if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        // ===== เปลี่ยนแท็บ =====
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+            if (tabName === 'graph') setTimeout(renderChart, 150);
+            if (tabName === 'monthly') renderMonthlySummary();
+        }
+
+        // ===== เพิ่มรายการ =====
+        async function addRecord() {
+            const date = document.getElementById('transactionDate').value;
+            const category = document.getElementById('categorySelect').value || 'อื่นๆ';
+            const name = document.getElementById('itemName').value.trim();
+            const amount = parseFloat(document.getElementById('amountValue').value);
+            const type = document.getElementById('typeSelect').value;
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน!'); return;
+            }
+
+            await db.collection('wallet_rooms').doc(roomId).collection('records').add({
+                date, category, name, amount, type,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('amountValue').value = '';
+        }
+
+        // ===== ลบรายการ =====
+        async function deleteRecord(id) {
+            if (!confirm('ต้องการลบรายการนี้?')) return;
+            await db.collection('wallet_rooms').doc(roomId).collection('records').doc(id).delete();
+        }
+
+        // ===== รายการโปรด =====
+        async function saveToFavorites() {
+            const category = document.getElementById('categorySelect').value || 'อื่นๆ';
+            const name = document.getElementById('itemName').value.trim();
+            const amount = parseFloat(document.getElementById('amountValue').value);
+            const type = document.getElementById('typeSelect').value;
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('กรุณากรอกข้อมูลก่อนบันทึกเป็นรายการโปรด'); return;
+            }
+
+            const exists = favorites.some(f => f.name === name && f.type === type);
+            if (exists) { alert('มีรายการนี้ในรายการโปรดแล้วครับ'); return; }
+
+            await db.collection('wallet_rooms').doc(roomId).collection('favorites').add({
+                category, name, amount, type,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('✅ บันทึกเป็นรายการโปรดเรียบร้อย!');
+        }
+
+        function renderFavorites() {
+            const list = document.getElementById('favList');
+            list.innerHTML = '';
+            if (favorites.length === 0) {
+                list.innerHTML = '<p style="color:#92400e; font-size:14px;">ยังไม่มีรายการโปรด</p>';
+                return;
+            }
+            favorites.forEach(f => {
+                const typeText = { income: 'รายรับ', advance: 'รับล่วงหน้า', expense: 'รายจ่าย' }[f.type];
+                list.innerHTML += `
+                    <div class="fav-item">
+                        <div class="fav-info" onclick="useFavorite('${f.category || ''}', '${f.name}', ${f.amount}, '${f.type}')">
+                            <strong>${f.category || 'ทั่วไป'}</strong> — ${f.name} — ${f.amount.toFixed(2)} บาท (${typeText})
+                        </div>
+                        <button class="fav-del" onclick="deleteFavorite('${f.id}')">ลบ</button>
+                    </div>`;
+            });
+        }
+
+        function useFavorite(category, name, amount, type) {
+            document.getElementById('categorySelect').value = category || '';
+            document.getElementById('itemName').value = name;
+            document.getElementById('amountValue').value = amount;
+            document.getElementById('typeSelect').value = type;
+        }
+
+        async function deleteFavorite(id) {
+            if (!confirm('ลบรายการโปรดนี้?')) return;
+            await db.collection('wallet_rooms').doc(roomId).collection('favorites').doc(id).delete();
+        }
+
+        // ===== แสดงตาราง + สีแยกตามประเภท =====
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            document.querySelectorAll('#financeTable th[data-sort]').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (th.dataset.sort === sortKey) {
+                    th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+
+            records.forEach(r => {
+                const typeText = { income: 'รายรับ', advance: 'รับล่วงหน้า', expense: 'รายจ่าย' }[r.type];
+                const sign = r.type === 'expense' ? '-' : '+';
+                const rowClass = r.type === 'income' ? 'row-income' : r.type === 'expense' ? 'row-expense' : 'row-advance';
+                const category = r.category || '-';
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${r.date}</td>
+                        <td><span class="category-tag">${category}</span></td>
+                        <td style="text-align:left;">${r.name}</td>
+                        <td class="${r.type}">${typeText}</td>
+                        <td class="${r.type}">${sign}${Number(r.amount).toFixed(2)}</td>
+                        <td><button class="btn-delete" onclick="deleteRecord('${r.id}')">ลบ</button></td>
+                    </tr>`;
+            });
+        }
+
+        // ===== คำนวณยอดรวม =====
+        function updateTotal() {
+            let total = 0;
+            records.forEach(r => {
+                total += (r.type === 'expense' ? -Number(r.amount) : Number(r.amount));
+            });
+            document.getElementById('totalAll').textContent = total.toFixed(2) + ' บาท';
+        }
+
+        // ===== ยอดรวมแยกตามเดือน =====
+        function renderMonthlySummary() {
+            const months = {};
+            records.forEach(r => {
+                const m = String(r.date).slice(0, 7);
+                if (!months[m]) months[m] = { income: 0, expense: 0, advance: 0 };
+                if (r.type === 'income') months[m].income += Number(r.amount);
+                else if (r.type === 'advance') months[m].advance += Number(r.amount);
+                else months[m].expense += Number(r.amount);
+            });
+            const container = document.getElementById('monthlySummary');
+            container.innerHTML = '';
+            Object.keys(months).sort().reverse().forEach(m => {
+                const mth = months[m];
+                const totalIn = mth.income + mth.advance;
+                const balance = totalIn - mth.expense;
+                container.innerHTML += `
+                    <div class="month-card">
+                        <h4>📅 ${m}</h4>
+                        <p class="month-income">✅ รวมรายรับ: ${totalIn.toFixed(2)} บาท</p>
+                        <p class="month-expense">❌ รวมรายจ่าย: ${mth.expense.toFixed(2)} บาท</p>
+                        <p class="month-balance">💰 ยอดคงเหลือ: ${balance.toFixed(2)} บาท</p>
+                    </div>`;
+            });
+            if (Object.keys(months).length === 0) {
+                container.innerHTML = '<p style="color:#888;">ยังไม่มีข้อมูล</p>';
+            }
+        }
+
+        // ===== กราฟ =====
+        function renderChart() {
+            const months = {};
+            records.forEach(r => {
+                const m = String(r.date).slice(0, 7);
+                if (!months[m]) months[m] = { income: 0, expense: 0 };
+                if (r.type !== 'expense') months[m].income += Number(r.amount);
+                else months[m].expense += Number(r.amount);
+            });
+            const labels = Object.keys(months).sort();
+            const incomeData = labels.map(m => months[m].income);
+            const expenseData = labels.map(m => months[m].expense);
+
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('financeChart');
+            if (!ctx) return;
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'รายรับ', data: incomeData, backgroundColor: '#16a34a' },
+                        { label: 'รายจ่าย', data: expenseData, backgroundColor: '#dc2626' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // ===== ส่งออก Excel =====
+        function exportToExcel() {
+            if (records.length === 0) { alert('ยังไม่มีข้อมูลเพื่อส่งออกครับ'); return; }
+            if (typeof XLSX === 'undefined') { alert('⚠️ กำลังโหลดระบบ Excel กรุณารอสักครู่'); return; }
+
+            let totalIncome = 0, totalExpense = 0, totalAdvance = 0;
+            const dataRows = [['วันที่', 'หมวดหมู่', 'รายการ', 'ประเภท', 'จำนวนเงิน (บาท)']];
+            records.forEach(r => {
+                const typeText = { income: 'รายรับ', advance: 'รับล่วงหน้า', expense: 'รายจ่าย' }[r.type];
+                const sign = r.type === 'expense' ? '-' : '+';
+                dataRows.push([r.date, r.category || '-', r.name, typeText, `${sign}${Number(r.amount).toFixed(2)}`]);
+                if (r.type === 'income') totalIncome += Number(r.amount);
+                else if (r.type === 'advance') totalAdvance += Number(r.amount);
+                else totalExpense += Number(r.amount);
+            });
+            dataRows.push(['', '', '', '', '']);
+            dataRows.push(['', '', '', '✅ รวมรายรับ', totalIncome.toFixed(2)]);
+            dataRows.push(['', '', '', '⏳ รับล่วงหน้า', totalAdvance.toFixed(2)]);
+            dataRows.push(['', '', '', '❌ รวมรายจ่าย', totalExpense.toFixed(2)]);
+            dataRows.push(['', '', '', '💰 ยอดคงเหลือ', (totalIncome + totalAdvance - totalExpense).toFixed(2)]);
+            dataRows.push(['', '', '', 'อัปเดตเมื่อ', new Date().toLocaleString('th-TH')]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(dataRows);
+            ws['!cols'] = [{wch:12},{wch:14},{wch:28},{wch:14},{wch:18}];
+            XLSX.utils.book_append_sheet(wb, ws, 'สรุปการเงิน');
+            const fileName = `ข้อมูลการเงิน_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            const status = document.getElementById('excelStatus');
+            status.textContent = `✅ ดาวน์โหลดสำเร็จ: ${fileName}`;
+            status.className = 'status-box success';
+            setTimeout(() => { status.textContent = ''; status.className = 'status-box'; }, 5000);
+        }
+
+        // ===== ส่งอีเมล =====
+        function saveEmailSettings() {
+            const settings = {
+                emailTo: document.getElementById('emailTo').value,
+                emailSubject: document.getElementById('emailSubject').value,
+                emailMessage: document.getElementById('emailMessage').value
+            };
+            localStorage.setItem('walletEmailSettings', JSON.stringify(settings));
+        }
+
+        function loadEmailSettings() {
+            const saved = localStorage.getItem('walletEmailSettings');
+            if (saved) {
+                const s = JSON.parse(saved);
+                if (s.emailTo) document.getElementById('emailTo').value = s.emailTo;
+                if (s.emailSubject) document.getElementById('emailSubject').value = s.emailSubject;
+                if (s.emailMessage) document.getElementById('emailMessage').value = s.emailMessage;
+            }
+        }
+
+        function buildEmailBody() {
+            let body = document.getElementById('emailMessage').value + "\r\n";
+            body += "==========================================\r\n";
+            body += "📋 รายการการเงินทั้งหมด\r\n";
+            body += "==========================================\r\n";
+            if (records.length === 0) {
+                body += "ยังไม่มีรายการ\r\n";
+            } else {
+                let totalIncome = 0, totalExpense = 0, totalAdvance = 0;
+                body += "วันที่\tหมวดหมู่\tรายการ\tประเภท\tจำนวนเงิน\r\n";
+                body += "------------------------------------------\r\n";
+                records.forEach(r => {
+                    const typeText = { income: 'รายรับ', advance: 'รับล่วงหน้า', expense: 'รายจ่าย' }[r.type];
+                    const sign = r.type === 'expense' ? '-' : '+';
+                    body += `${r.date}\t${r.category || '-'}\t${r.name}\t${typeText}\t${sign}${Number(r.amount).toFixed(2)} บาท\r\n`;
+                    if (r.type === 'income') totalIncome += Number(r.amount);
+                    else if (r.type === 'advance') totalAdvance += Number(r.amount);
+                    else totalExpense += Number(r.amount);
+                });
+                body += "------------------------------------------\r\n";
+                body += `✅ รวมรายรับ:\t\t${totalIncome.toFixed(2)} บาท\r\n`;
+                body += `⏳ รับล่วงหน้า:\t\t${totalAdvance.toFixed(2)} บาท\r\n`;
+                body += `❌ รวมรายจ่าย:\t\t${totalExpense.toFixed(2)} บาท\r\n`;
+                body += `💰 ยอดคงเหลือ:\t\t${(totalIncome + totalAdvance - totalExpense).toFixed(2)} บาท\r\n`;
+            }
+            body += "\r\n==========================================\r\n";
+            body += `ส่งเมื่อ: ${new Date().toLocaleString('th-TH')}\r\n`;
+            body += "-- กระเป๋าเงินออนไลน์ --";
+            return encodeURIComponent(body);
+        }
+
+        function sendEmail() {
+            const to = document.getElementById('emailTo').value.trim();
+            const subject = encodeURIComponent(document.getElementById('emailSubject').value);
+            if (!to || !to.includes('@')) { alert('กรุณากรอกอีเมลให้ถูกต้อง'); return; }
+            saveEmailSettings();
+            const body = buildEmailBody();
+            window.open(`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(to)}&su=${subject}&body=${body}`, '_blank');
+            const status = document.getElementById('emailStatus');
+            status.textContent = '✅ เปิด Gmail สำเร็จ! กดส่งเมลได้เลยครับ';
+            status.className = 'status-box success';
+            setTimeout(() => { status.textContent = ''; status.className = 'status-box'; }, 5000);
+        }
+
+        // ===== ลบข้อมูลทั้งหมด =====
+        async function clearAllData() {
+            if (!confirm('⚠️ ท่านต้องการลบข้อมูลทั้งหมดในห้องนี้หรือไม่? ไม่สามารถกู้คืนได้!')) return;
+            if (!confirm('⚠️ ยืนยันอีกครั้ง ต้องการลบข้อมูลทั้งหมด?')) return;
+
+            const snapshot = await db.collection('wallet_rooms').doc(roomId).collection('records').get();
+            const batch = db.batch();
+            snapshot.forEach(doc => { batch.delete(doc.ref); });
+            await batch.commit();
+
+            alert('✅ ลบข้อมูลทั้งหมดเรียบร้อยแล้วครับ');
+        }
+    </script>
+</body>
+</html>
